@@ -23,7 +23,9 @@ jobs:
       - name: Build standalone desktop GUI executable
         run: >
           pyinstaller --onefile --windowed --name alignstatplot-gui
+          --icon=assets/icon.ico
           --collect-all alignstatplot_py
+          --collect-data Bio
           --hidden-import matplotlib.backends.backend_qtagg
           packaging/alignstatplot_gui.py
 

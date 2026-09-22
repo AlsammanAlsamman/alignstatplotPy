@@ -11,7 +11,8 @@
     "index.html",
     "main.js",
     "style.css",
-    "serve.js"
+    "serve.js",
+    "icon.png"
   ],
   "scripts": {
     "serve": "node serve.js"

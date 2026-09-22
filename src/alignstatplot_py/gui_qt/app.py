@@ -10,6 +10,7 @@ from pathlib import Path
 
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QApplication,
     QDoubleSpinBox,
@@ -33,6 +34,8 @@ from PySide6.QtWidgets import (
 )
 
 from ..pipeline import run_pipeline
+
+ICON_PATH = Path(__file__).resolve().parent.parent / "data" / "icon.png"
 
 STYLE_SHEET = """
 QMainWindow { background-color: #FAFAFA; }
@@ -67,6 +70,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("alignstatplot")
+        if ICON_PATH.exists():
+            self.setWindowIcon(QIcon(str(ICON_PATH)))
         self.resize(1200, 800)
         self.fasta_path = ""
         self.anno_path = ""
@@ -237,6 +242,8 @@ class MainWindow(QMainWindow):
 def main() -> None:
     app = QApplication(sys.argv)
     app.setStyleSheet(STYLE_SHEET)
+    if ICON_PATH.exists():
+        app.setWindowIcon(QIcon(str(ICON_PATH)))
     window = MainWindow()
     window.show()
     sys.exit(app.exec())

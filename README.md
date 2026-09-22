@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/icon.png" alt="alignstatplot-py icon" width="96" />
+</p>
+
 # alignstatplot-py
 
 Sequence alignment statistics and fancy plots — a Python port and standalone-app
@@ -19,6 +23,16 @@ All three front ends call the exact same analysis pipeline
 app always agree with each other bit-for-bit. See
 [Result parity with the R package](#result-parity-with-the-r-package) below
 for how this Python engine compares numerically to the original R code.
+
+## Screenshots
+
+| Desktop GUI | Web GUI |
+| --- | --- |
+| ![Desktop GUI showing the circular alignment plot](assets/screenshot-desktop-gui.png) | ![Web GUI upload page](assets/screenshot-web-gui.png) |
+
+The circular alignment plot, standalone:
+
+![Circular alignment overview plot](assets/screenshot-circular-plot.png)
 
 ## Install
 
