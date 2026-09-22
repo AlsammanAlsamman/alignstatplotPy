@@ -110,7 +110,7 @@ def run_pipeline(
         "conservation_track": plots.plot_conservation_track(position_stats),
         "variant_density": plots.plot_variant_density(filtered_table, window_size=variant_window),
         "sequence_logo": plots.plot_sequence_logo(filtered_table),
-        "align_circle": plots.plot_align_circle(aligned, anno),
+        "align_circle": plots.plot_align_circle(aligned),
         "summary_dashboard": plots.plot_summary_dashboard(aligned, filtered_table, dist_df, stats_df, nuc_freq),
     }
     if region_stats_df is not None and not region_stats_df.empty:

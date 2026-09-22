@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import matplotlib.pyplot as plt
+from matplotlib.colors import to_hex
 
 PALETTE = {
     "A": "#2E7D32",
@@ -30,3 +31,23 @@ def new_figure(figsize=(8, 5)):
     fig.patch.set_facecolor("white")
     apply_theme(ax)
     return fig, ax
+
+
+def get_seq_colors(n: int) -> list[str]:
+    """A distinct categorical colour per sequence, analogous to the R
+    package's ``getSeqColors`` (Dark2 / Kelly / Alphabet / Polychrome by
+    sequence count)."""
+    if n <= 8:
+        cmap = plt.get_cmap("Dark2")
+        return [to_hex(cmap(i)) for i in range(max(n, 1))]
+    if n <= 20:
+        cmap = plt.get_cmap("tab20")
+        return [to_hex(cmap(i)) for i in range(n)]
+    pool: list[str] = []
+    for name in ("tab20", "tab20b", "tab20c"):
+        cmap = plt.get_cmap(name)
+        pool += [to_hex(cmap(i)) for i in range(20)]
+    if n <= len(pool):
+        return pool[:n]
+    reps = n // len(pool) + 1
+    return (pool * reps)[:n]

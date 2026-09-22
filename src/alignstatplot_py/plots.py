@@ -6,15 +6,13 @@ embed, or further customise the same figure objects.
 """
 from __future__ import annotations
 
-import math
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.patches import FancyArrowPatch, Rectangle, Wedge
 from scipy.cluster.hierarchy import dendrogram, linkage
 
-from .theme import ACCENT, PALETTE, apply_theme, new_figure
+from . import circos
+from .theme import ACCENT, PALETTE, apply_theme, get_seq_colors, new_figure
 
 GAP = "-"
 
@@ -219,46 +217,172 @@ def plot_sequence_logo(table: pd.DataFrame, max_positions: int = 60) -> plt.Figu
     return fig
 
 
-def plot_align_circle(aligned: dict[str, str], annotation: pd.DataFrame | None = None) -> plt.Figure:
-    """Circular alignment plot: each sequence is a concentric ring coloured
-    by base, with an optional gene-annotation ring at the centre. Python
-    analogue of the R package's ``plotAlignCircle`` / ``drawConsWithGenes``."""
+def plot_align_circle(
+    aligned: dict[str, str],
+    colors: list[str] | None = None,
+    max_gene_sectors: int = 15,
+) -> plt.Figure:
+    """Circular alignment overview. Python analogue of the R package's
+    ``plotAlignCircle``: dispatches to :func:`draw_cons_with_genes` (one
+    pie sector per sequence plus a consensus sector, linked by ribbons)
+    for up to ``max_gene_sectors`` sequences -- matching R's own 15-sequence
+    threshold, above which the per-sector ribbon layout gets too crowded to
+    read -- and to :func:`draw_cons_with_no_genes` (stacked concentric
+    coverage rings around a single consensus circle) beyond that.
+    """
+    if len(aligned) <= max_gene_sectors:
+        return draw_cons_with_genes(aligned, colors=colors)
+    return draw_cons_with_no_genes(aligned, colors=colors)
+
+
+def draw_cons_with_genes(
+    aligned: dict[str, str],
+    cons_zoom_factor: float = 3.0,
+    colors: list[str] | None = None,
+    seq_fontsize: float = 8,
+    cons_fontsize: float = 10,
+    tick_fontsize: float = 5,
+    cons_tick_fontsize: float = 6,
+    link_alpha: float = 0.4,
+    max_fragments_per_seq: int = 40,
+) -> plt.Figure:
+    """One pie sector per sequence (sized by its ungapped length) plus a
+    zoomed-up ``Consensus`` sector, connected by translucent ribbon links
+    at every ungapped fragment -- and a matching stack of opaque per-sequence
+    coverage rings inside the consensus sector. Python analogue of the R
+    package's ``drawConsWithGenes``, built from the same fragment/link
+    algorithm (``alignmentNoGaps`` / ``alignmentNoGapsLinks``) rather than
+    ``circlize``."""
     names = list(aligned.keys())
     n = len(names)
-    length = len(next(iter(aligned.values())))
+    cons_length = len(next(iter(aligned.values())))
+    seq_lengths = {name: max(len(seq.replace(GAP, "")), 1) for name, seq in aligned.items()}
 
-    fig = plt.figure(figsize=(8, 8))
-    ax = fig.add_subplot(111, projection="polar")
-    ax.set_theta_zero_location("N")
-    ax.set_theta_direction(-1)
-    ax.set_ylim(0, n + 2)
+    sizes = {**seq_lengths, "Consensus": cons_length * cons_zoom_factor}
+    order = names + ["Consensus"]
+    sectors = circos.layout_sectors(sizes, order, gap_degree=5.0, start_degree=90.0)
+    # `sizes["Consensus"]` is zoomed only to *allocate more angular width* to
+    # the consensus sector -- its actual coordinate range for tick/ribbon
+    # placement is still 0..cons_length, not 0..cons_length*zoom.
+    zoomed = sectors["Consensus"]
+    cons_sector = circos.Sector("Consensus", zoomed.start_deg, zoomed.end_deg, 0.0, cons_length)
+    sectors["Consensus"] = cons_sector
+    palette = colors or get_seq_colors(n)
+
+    fig, ax = plt.subplots(figsize=(9, 9))
+    ax.set_xlim(-1.35, 1.35)
+    ax.set_ylim(-1.35, 1.35)
+    ax.set_aspect("equal")
     ax.axis("off")
 
-    theta = np.linspace(0, 2 * np.pi, length, endpoint=False)
-    width = (2 * np.pi / length) * 1.02
+    ring_band = 0.5 / max(n, 1)
+    link_inner_radius = 0.39
+    ring_outer_max = 1 - 0.11
 
-    for ring, name in enumerate(reversed(names)):
-        seq = aligned[name]
-        radius = ring + 1
-        colors = [PALETTE.get(b, "#333333") for b in seq]
-        ax.bar(theta, height=0.9, width=width, bottom=radius, color=colors, linewidth=0)
-        ax.text(0, radius + 0.45, name, fontsize=6, ha="right", va="center")
+    for i, name in enumerate(names):
+        sector = sectors[name]
+        color = palette[i % len(palette)]
 
-    if annotation is not None and not annotation.empty:
-        for _, region in annotation.iterrows():
-            start_theta = 2 * np.pi * (region["Start"] - 1) / length
-            end_theta = 2 * np.pi * (region["End"] - 1) / length
-            color = "#5E35B1" if str(region.get("Region", "")).lower() == "exon" else "#B39DDB"
-            ax.bar(
-                (start_theta + end_theta) / 2,
-                height=0.6,
-                width=max(end_theta - start_theta, width),
-                bottom=0.2,
-                color=color,
-                linewidth=0,
+        fragments = circos.non_gap_fragments(aligned[name])
+        local_fragments = circos.local_fragment_positions(fragments)
+        frag_pairs = circos.merge_fragment_pairs(list(zip(fragments, local_fragments)), max_gap=2)
+        frag_pairs = circos.limit_fragment_pairs(frag_pairs, max_n=max_fragments_per_seq)
+
+        ring_outer = ring_outer_max - ring_band * i
+        ring_inner = ring_outer_max - ring_band * (i + 1)
+
+        for (a_start, a_end), (l_start, l_end) in frag_pairs:
+            cons_start = cons_length - a_end
+            cons_end = cons_length - a_start + 1
+
+            circos.draw_ribbon(
+                ax, cons_sector, cons_start, cons_end, link_inner_radius, sector, l_start, l_end, 0.9,
+                facecolor=color, edgecolor="none", alpha=link_alpha, zorder=1,
+            )
+            circos.draw_arc_band(
+                ax, cons_sector, cons_start, cons_end, ring_inner, ring_outer,
+                facecolor=color, edgecolor="white", linewidth=0.3, zorder=3,
             )
 
-    ax.set_title("Circular alignment overview", pad=20)
+        circos.draw_sector_ticks(ax, sector, 0.92, n_ticks=3, fontsize=tick_fontsize)
+        circos.draw_sector_label(ax, sector, 1.06, name, fontsize=seq_fontsize, fontweight="bold", color="#222222")
+
+    circos.draw_sector_ticks(ax, cons_sector, 0.92, n_ticks=6, fontsize=cons_tick_fontsize, fmt="{:.0f}bp")
+    circos.draw_sector_label(
+        ax, cons_sector, 1.06, "Consensus", fontsize=cons_fontsize, fontweight="bold", color="#333333"
+    )
+
+    ax.set_title("Circular alignment overview", pad=14, fontsize=13, fontweight="bold")
+    return fig
+
+
+def draw_cons_with_no_genes(
+    aligned: dict[str, str],
+    colors: list[str] | None = None,
+    bg_color: str = "#CCCCCC",
+    seq_fontsize: float | None = None,
+    bp_fontsize: float = 7,
+    max_fragments_per_seq: int = 60,
+) -> plt.Figure:
+    """A single consensus circle (one small angular gap) with one stacked
+    coverage ring per sequence -- each ring highlighting that sequence's
+    ungapped stretches in its own colour over a light background baseline.
+    Python analogue of the R package's ``drawConsWithNoGenes``, used once a
+    per-sequence pie-sector layout would get too crowded to read."""
+    names = list(aligned.keys())
+    n = len(names)
+    cons_length = len(next(iter(aligned.values())))
+    palette = colors or get_seq_colors(n)
+    if seq_fontsize is None:
+        seq_fontsize = max(4.0, min(11.0, 90.0 / max(n, 1)))
+
+    sectors = circos.layout_sectors({"Consensus": cons_length}, ["Consensus"], gap_degree=15.0, start_degree=95.0)
+    cons_sector = sectors["Consensus"]
+
+    fig, ax = plt.subplots(figsize=(9, 9))
+    ax.set_xlim(-1.15, 1.15)
+    ax.set_ylim(-1.15, 1.15)
+    ax.set_aspect("equal")
+    ax.axis("off")
+
+    r_min, r_max = 0.18, 0.95
+    band = (r_max - r_min) / max(n, 1)
+
+    for i, name in enumerate(names):
+        r_inner = r_min + band * i
+        r_outer = r_min + band * (i + 1)
+        color = palette[i % len(palette)]
+
+        circos.draw_arc_band(
+            ax, cons_sector, 0, cons_length, r_inner, r_outer, facecolor=bg_color, edgecolor="none", zorder=1
+        )
+
+        fragments = circos.merge_close_fragments(circos.non_gap_fragments(aligned[name]), max_gap=2)
+        if len(fragments) > max_fragments_per_seq:
+            fragments = sorted(fragments, key=lambda f: f[1] - f[0], reverse=True)[:max_fragments_per_seq]
+            fragments.sort()
+        for a_start, a_end in fragments:
+            circos.draw_arc_band(
+                ax, cons_sector, a_start, a_end, r_inner, r_outer,
+                facecolor=color, edgecolor="white", linewidth=0.15, zorder=2,
+            )
+
+        theta = cons_sector.angle_of(cons_sector.data_min)
+        mid_r = (r_inner + r_outer) / 2
+        x, y = mid_r * np.cos(theta), mid_r * np.sin(theta)
+        deg = np.rad2deg(theta)
+        # Run the label tangentially (perpendicular to the radius) rather
+        # than radially, so stacked rings' labels sit in their own row
+        # instead of overlapping along the same radial line.
+        tangent = deg - 90
+        flipped = tangent < -90 or tangent > 90
+        ax.text(
+            x, y, name, fontsize=seq_fontsize, ha=("left" if flipped else "right"), va="center",
+            rotation=tangent + 180 if flipped else tangent, rotation_mode="anchor",
+        )
+
+    circos.draw_sector_ticks(ax, cons_sector, r_max + 0.02, n_ticks=8, fontsize=bp_fontsize, fmt="{:.0f}bp")
+    ax.set_title("Circular alignment overview", pad=14, fontsize=13, fontweight="bold")
     return fig
 
 
