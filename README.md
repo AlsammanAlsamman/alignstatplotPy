@@ -22,6 +22,12 @@ for how this Python engine compares numerically to the original R code.
 
 ## Install
 
+**No Python? Windows only:** download `alignstatplot-gui.exe` from the
+[latest release](https://github.com/AlsammanAlsamman/alignstatplotPy/releases/latest)
+and run it directly — no install step at all.
+
+**Python users:**
+
 ```bash
 pip install alignstatplot-py            # library + CLI only
 pip install "alignstatplot-py[gui]"     # + desktop Qt GUI
@@ -46,6 +52,11 @@ This writes an `alignment.fasta`, `sequence_stats.csv`, `diversity_stats.csv`,
 `output/`.
 
 ## Quickstart: desktop GUI
+
+Windows, no Python installed: download and run `alignstatplot-gui.exe` from
+the [latest release](https://github.com/AlsammanAlsamman/alignstatplotPy/releases/latest).
+
+Otherwise:
 
 ```bash
 pip install "alignstatplot-py[gui]"
@@ -146,13 +157,44 @@ npm publish               # requires your own npm credentials
 ```
 src/alignstatplot_py/   Python package (engine, CLI, Qt GUI, FastAPI web backend)
 frontend/                Web GUI source (published separately to npm)
+packaging/               PyInstaller entry point for the standalone .exe
 examples/                Example FASTA/annotation files (shared with the R package)
 tests/                   pytest suite
+```
+
+### Building the standalone .exe yourself
+
+Pushing a `v*` tag runs [`.github/workflows/release.yml`](.github/workflows/release.yml),
+which builds `alignstatplot-gui.exe` on `windows-latest` and attaches it to
+a GitHub Release automatically. To build it locally instead:
+
+```bash
+pip install -e ".[gui]" pyinstaller
+pyinstaller --onefile --windowed --name alignstatplot-gui \
+  --collect-all alignstatplot_py \
+  --hidden-import matplotlib.backends.backend_qtagg \
+  packaging/alignstatplot_gui.py
+# -> dist/alignstatplot-gui.exe
 ```
 
 ## License
 
 GPL-3.0-or-later, matching the R package.
+
+## Citation
+
+If you use this software, please cite the original AlignStatPlot paper,
+which describes the methodology this package reimplements:
+
+> Alsamman, A.M., El Allali, A., Mokhtar, M.M., Al-Sham'aa, K., Nassar, A.E.,
+> Mousa, K.H. and Kehel, Z., 2023. AlignStatPlot: An R package and online
+> tool for robust sequence alignment statistics and innovative visualization
+> of big data. *PLoS ONE*, 18(9), p.e0291204.
+> https://doi.org/10.1371/journal.pone.0291204
+
+A machine-readable [`CITATION.cff`](CITATION.cff) is included for GitHub's
+"Cite this repository" button, covering both the paper above and this
+Python/CLI/GUI port specifically.
 
 ## See also
 

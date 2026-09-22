@@ -1,0 +1,42 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, please cite the original AlignStatPlot paper
+  (see "preferred-citation") describing the methodology it reimplements,
+  and optionally this repository for the Python/CLI/GUI port itself.
+title: "alignstatplot-py: Python port, CLI, and GUIs for alignstatplot"
+type: software
+version: 0.1.0
+date-released: "2026-09-22"
+license: GPL-3.0-or-later
+repository-code: "https://github.com/AlsammanAlsamman/alignstatplotPy"
+url: "https://github.com/AlsammanAlsamman/alignstatplot"
+authors:
+  - family-names: Alsamman
+    given-names: "Alsamman M."
+    email: smahmoud@ageri.sci.eg
+preferred-citation:
+  type: article
+  title: >-
+    AlignStatPlot: An R package and online tool for robust sequence
+    alignment statistics and innovative visualization of big data
+  journal: "PLOS ONE"
+  year: 2023
+  volume: 18
+  issue: 9
+  start: "e0291204"
+  doi: "10.1371/journal.pone.0291204"
+  authors:
+    - family-names: Alsamman
+      given-names: "A.M."
+    - family-names: "El Allali"
+      given-names: "A."
+    - family-names: Mokhtar
+      given-names: "M.M."
+    - family-names: "Al-Sham'aa"
+      given-names: "K."
+    - family-names: Nassar
+      given-names: "A.E."
+    - family-names: Mousa
+      given-names: "K.H."
+    - family-names: Kehel
+      given-names: "Z."

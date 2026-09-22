@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows-exe:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -e ".[gui]" pyinstaller
+
+      - name: Build standalone desktop GUI executable
+        run: >
+          pyinstaller --onefile --windowed --name alignstatplot-gui
+          --collect-all alignstatplot_py
+          --hidden-import matplotlib.backends.backend_qtagg
+          packaging/alignstatplot_gui.py
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: alignstatplot-gui-windows
+          path: dist/alignstatplot-gui.exe
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/alignstatplot-gui.exe
+          generate_release_notes: true
+          body: |
+            Standalone Windows desktop GUI for alignstatplot-py -- no Python
+            install required. Download `alignstatplot-gui.exe` below, run it,
+            pick a FASTA file, and click **Run analysis**.
+
+            For the CLI, web GUI, or to use it as a library, see
+            `pip install alignstatplot-py` instead (README has details).
