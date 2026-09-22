@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>alignstatplot</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="hero">
+    <h1>alignstatplot</h1>
+    <p>Sequence alignment statistics &amp; fancy plots &mdash; upload a FASTA file and run the full analysis in your browser.</p>
+  </header>
+
+  <main class="layout">
+    <section class="panel" id="controls">
+      <h2>1. Input</h2>
+      <div id="dropzone" class="dropzone">
+        <p><strong>Drop a FASTA file here</strong> or click to browse</p>
+        <p class="filename" id="fasta-filename">No file selected</p>
+        <input type="file" id="fasta-input" accept=".fasta,.fa,.fna,.txt" hidden />
+      </div>
+
+      <div id="anno-dropzone" class="dropzone dropzone-small">
+        <p><strong>Optional:</strong> drop an annotation file, or click to browse</p>
+        <p class="filename" id="anno-filename">No file selected</p>
+        <input type="file" id="anno-input" hidden />
+      </div>
+
+      <h2>2. Parameters</h2>
+      <div class="form-grid">
+        <label>Max missing per column
+          <input type="number" id="max-miss" min="0" max="1" step="0.05" value="0.2" />
+        </label>
+        <label>SNP clusters
+          <input type="number" id="n-clusters" min="1" max="20" step="1" value="4" />
+        </label>
+        <label>Min SNP cluster length
+          <input type="number" id="min-cluster-length" min="1" max="50" step="1" value="3" />
+        </label>
+        <label>Variant density window
+          <input type="number" id="variant-window" min="5" max="500" step="5" value="50" />
+        </label>
+      </div>
+
+      <button id="run-btn" class="run-btn">Run analysis</button>
+      <p id="status" class="status"></p>
+    </section>
+
+    <section class="panel results" id="results" hidden>
+      <h2>3. Results</h2>
+      <div class="tabs" id="tabs"></div>
+      <div class="tab-content" id="tab-content"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Companion tool for the <a href="https://github.com/AlsammanAlsamman/alignstatplot" target="_blank" rel="noopener">alignstatplot R package</a>. Backend: FastAPI + the same Python analysis engine used by the CLI and desktop app.</p>
+  </footer>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+{
+  "name": "alignstatplot-web-gui",
+  "version": "0.1.0",
+  "description": "Browser GUI for alignstatplot-py: drag-and-drop FASTA upload and interactive result browsing. Static HTML/CSS/JS, no build step, no framework — talks to the alignstatplot-py FastAPI backend (`alignstatplot web`).",
+  "type": "module",
+  "main": "main.js",
+  "bin": {
+    "alignstatplot-web-gui": "serve.js"
+  },
+  "files": [
+    "index.html",
+    "main.js",
+    "style.css",
+    "serve.js"
+  ],
+  "scripts": {
+    "serve": "node serve.js"
+  },
+  "keywords": [
+    "bioinformatics",
+    "fasta",
+    "sequence-alignment",
+    "gui"
+  ],
+  "author": "Alsamman M. Alsamman",
+  "license": "GPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AlsammanAlsamman/alignstatplotPy.git",
+    "directory": "frontend"
+  },
+  "homepage": "https://github.com/AlsammanAlsamman/alignstatplotPy#readme"
+}

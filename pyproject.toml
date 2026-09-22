@@ -1,0 +1,53 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "alignstatplot-py"
+version = "0.1.0"
+description = "Sequence alignment statistics and fancy plots -- Python port/companion of the R package alignstatplot, with CLI, Qt desktop GUI, and browser GUI front ends."
+readme = "README.md"
+license = { text = "GPL-3.0-or-later" }
+authors = [{ name = "Alsamman M. Alsamman", email = "smahmoud@ageri.sci.eg" }]
+requires-python = ">=3.10"
+keywords = ["bioinformatics", "fasta", "sequence-alignment", "phylogenetics", "snp", "plotting"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Visualization",
+]
+dependencies = [
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "scipy>=1.10",
+    "scikit-learn>=1.2",
+    "matplotlib>=3.7",
+    "biopython>=1.81",
+    "click>=8.1",
+]
+
+[project.optional-dependencies]
+gui = ["PySide6>=6.5"]
+web = ["fastapi>=0.110", "uvicorn[standard]>=0.29", "python-multipart>=0.0.9"]
+all = ["alignstatplot-py[gui,web]"]
+dev = ["pytest>=7.4", "build>=1.0", "twine>=5.0"]
+
+[project.urls]
+Homepage = "https://github.com/AlsammanAlsamman/alignstatplotPy"
+"R package" = "https://github.com/AlsammanAlsamman/alignstatplot"
+Issues = "https://github.com/AlsammanAlsamman/alignstatplotPy/issues"
+
+[project.scripts]
+alignstatplot = "alignstatplot_py.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/alignstatplot_py"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "README.md", "LICENSE"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
